@@ -245,7 +245,7 @@ build_env() {
 
   # pluto
   pluto_repo_url="${pluto_repo_url:-https://github.com/bondhugula/pluto.git}";
-  pluto_branch="${pluto_branch:-0.11.4}";
+  pluto_branch="${pluto_branch:-0.12.0}";
   pluto_prefix="${pluto_prefix:-/opt/pluto/${pluto_branch}}";
   pluto_src_dir="${pluto_src_dir:-${src_home}/pluto/${pluto_branch}}";
 

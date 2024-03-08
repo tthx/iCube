@@ -91,6 +91,7 @@ openCARP_apt() {
     libffi-dev libelf-dev libelfin-dev \
     flex bison \
     ccache \
+    libgmp3-dev \
     ${task_based};
     #nvidia-cuda-toolkit \
   cuda_install;

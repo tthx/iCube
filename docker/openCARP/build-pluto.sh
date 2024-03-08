@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail;
 
-unpatch() {
+restore() {
   if [ -f "${pluto_src_dir}/pet/scan.h.orig" ];
   then
     mv -f "${pluto_src_dir}/pet/scan.h.orig" \
@@ -17,12 +17,26 @@ unpatch() {
     mv "${pluto_src_dir}/cloog-isl/Makefile.orig" \
       "${pluto_src_dir}/cloog-isl/Makefile";
   fi
+  return 0;
+}
+
+apply_patches() {
+  patch -b "${pluto_src_dir}/pet/scan.h" \
+    "${src_home}/iCube/pluto/pet/scan.h.patch";
+  patch -b "${pluto_src_dir}/pet/scop_plus.h" \
+    "${src_home}/iCube/pluto/pet/scop_plus.h.patch";
+  patch -b "${pluto_src_dir}/cloog-isl/Makefile" \
+    "${src_home}/iCube/pluto/cloog-isl/Makefile.patch";
+  return 0;
 }
 
 build_pluto() {
   local script_dir="$(dirname "$(readlink -f "${BASH_SOURCE}")")";
   local pluto_branch="master";
   . "${script_dir}/runtime-env.sh";
+  python_runtime_env;
+  cuda_runtime_env;
+  llvm_runtime_env;
   local cc="/usr/bin/gcc";
   local cxx="/usr/bin/g++";
   local cflags="${common_cflags}";
@@ -52,17 +66,12 @@ build_pluto() {
     --with-clang-prefix="$(llvm-config --prefix)" \
     --enable-glpk;
   make clean;
-  unpatch;
-  patch -b "${pluto_src_dir}/pet/scan.h" \
-    "${src_home}/iCube/pluto/pet/scan.h.patch";
-  patch -b "${pluto_src_dir}/pet/scop_plus.h" \
-    "${src_home}/iCube/pluto/pet/scop_plus.h.patch";
-  patch -b "${pluto_src_dir}/cloog-isl/Makefile" \
-    "${src_home}/iCube/pluto/cloog-isl/Makefile.patch";
+  restore;
+  apply_patches;
   make -j $(nproc) all;
   make test;
   make install;
-  unpatch;
+  restore;
   cp -f "${src_home}/iCube/pluto/inscop" \
     "${pluto_prefix}/bin/.";
   cp -f "${src_home}/iCube/pluto/polycc" \
