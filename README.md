@@ -6,12 +6,12 @@ Ils vont à M. [**Vincent LOECHNER**](http://icps.u-strasbg.fr/people/loechner/p
 
 ## Objectifs
 
-L'objectif est d'optimiser une partie d'un composant utilisé par [*OpenCARP*](https://opencarp.org/): [*Ginkgo*](https://ginkgo-project.github.io/), une librairie mathématique; *Ginkgo* devant remplacer [*PETSc*](https://petsc.org/release/), l'actuelle librairie mathématique utilisée. *Ginkgo* et *PETSc* manipulent principalement des vecteurs et des matrices, et creuses et denses. La manipulation de matrices denses ou de vecteurs est propice aux [*optimisations polyédriques*](https://polyhedral.info/).
+L'objectif est d'optimiser une partie d'un composant utilisé par [*OpenCARP*](https://opencarp.org/): [*Ginkgo*](https://ginkgo-project.github.io/), une librairie mathématique; *Ginkgo* devant remplacer [*PETSc*](https://petsc.org/release/), l'actuelle librairie mathématique utilisée. *Ginkgo* et *PETSc* manipulent principalement des vecteurs et des matrices, creuses et denses. La manipulation de matrices denses ou de vecteurs est propice aux [*optimisations polyédriques*](https://polyhedral.info/).
 
 Le travail a emprunté le plan suivant:
 
-- Optimiser par les méthodes polyédriques le solveur de *Ginkgo* utilisé par *OpenCARP*.
-- Études des optimisations de *OpenCARP* pour les architectures [*Exascale*](https://fr.wikipedia.org/wiki/Supercalculateur_exaflopique).
+- Exlorer les possibles optimisations par des méthodes polyédriques du solveur *Ginkgo* utilisé par *openCARP*.
+- Étudier les optimisations d'*openCARP* pour les architectures [*Exascale*](https://fr.wikipedia.org/wiki/Supercalculateur_exaflopique).
 
 L'essentiel du travail a été porté sur une mise à jour des connaissances par les lectures de nombreux articles, de cours et, évidemment, des discussions avec M. Vincent LOECHNER, le directeur de ce stage. Les implémentations et leurs tests, en proportion, ont occupé quelques 20% des activités.
 
@@ -19,11 +19,11 @@ L'essentiel du travail a été porté sur une mise à jour des connaissances par
 
 ### Optimisations polyédriques
 
-Le but est d'optimiser automatiquement un code: un outil (e.g. un compilateur) y identifie des sections appelées *Static Control Parts* ([*SCoP*](http://web.cs.ucla.edu/~pouchet/software/polyopt/doc/htmltexinfo/Specifics-of-Polyhedral-Programs.html)) pour y appliquer des transformations polyédriques. Un programmeur, selon l'outil utilisé, peut être amené à guider l'identification des *SCoP* en posant des balises (e.g. des [*pragma*](https://gcc.gnu.org/onlinedocs/cpp/Pragmas.html)) dans le code à optimiser, l'outil d'optimisation vérifie si la section du code balisé correspond à un *SCoP* avant d'y appliquer des transformations polyédriques.
+Le but est d'optimiser automatiquement un code: un outil (e.g. un compilateur) y identifie des sections appelées *Static Control Parts* ([*SCoP*](http://web.cs.ucla.edu/~pouchet/software/polyopt/doc/htmltexinfo/Specifics-of-Polyhedral-Programs.html)) pour y appliquer des transformations polyédriques qui optimisent ce code. Un programmeur, selon l'outil utilisé, peut être amené à guider l'identification des *SCoP* en posant des balises (e.g. des [*pragma*](https://gcc.gnu.org/onlinedocs/cpp/Pragmas.html)) dans le code à optimiser, et l'outil d'optimisation vérifie si la section du code balisé correspond à un *SCoP* avant d'y appliquer des transformations polyédriques.
 
 #### Présentation générale du code de *Ginkgo*
 
-*Ginkgo* est clairement structuré: les interfaces et leurs implémentations optimisées pour GPUs (supportant actuellement [*CUDA*](https://docs.nvidia.com/cuda/doc/index.html), [*HIP*](https://rocm.docs.amd.com/projects/HIP/en/latest/) et [*SYCL*](https://www.khronos.org/sycl/)) et CPUs par [*OpenMP*](https://www.openmp.org/) sont aisément identifiables. Une implémentation distribuée, via [*MPI*](https://en.wikipedia.org/wiki/Message_Passing_Interface), est en cours de développement. *Ginkgo* fournit aussi une implémentation dite de *référence*: c'est une version séquentielle permettant de valider des algorithmes et n'est pas destinée à l'utilisation. *Note*: Par le choix pour la diversité des implémentations, afin d'exploiter au mieux les architectures des processeurs, *Ginkgo* a un volume de code conséquent à maintenir, avec, cependant, l'avantage de cibler finement les modifications.
+*Ginkgo* est clairement structuré: les interfaces et leurs implémentations optimisées pour GPUs (supportant actuellement [*CUDA*](https://docs.nvidia.com/cuda/doc/index.html), [*HIP*](https://rocm.docs.amd.com/projects/HIP/en/latest/) et [*SYCL*](https://www.khronos.org/sycl/)) et CPUs par [*OpenMP*](https://www.openmp.org/) sont aisément identifiables. Une implémentation distribuée, via [*MPI*](https://en.wikipedia.org/wiki/Message_Passing_Interface), est en cours de développement. *Ginkgo* fournit aussi une implémentation dite de *référence*: c'est une version non optimisée séquentielle permettant de valider des algorithmes et n'est pas destinée à l'utilisation. *Note*: Par le choix pour la diversité des implémentations, afin d'exploiter au mieux les architectures des processeurs, *Ginkgo* a un volume de code assez important à maintenir, avec, cependant, l'avantage de cibler finement les modifications.
 
 #### Présentation générale du code du solveur *GC* de *Ginkgo*
 
@@ -75,7 +75,7 @@ void step_2(std::shared_ptr<const DefaultExecutor> exec,                  \
 
 Ces codes sont dans le fichier [`ginkgo/core/solver/gc_kernels.hpp`](https://github.com/ginkgo-project/ginkgo/blob/49242ff89af1e695d7794f6d50ed9933024b66fe/core/solver/cg_kernels.hpp) et définissent les interfaces des implémentions pour *CUDA*, *HIP*, *OpenMP*, etc.
 
-**Note**: *OpenCARP* travaille principalement sur des matrices creuses, pourtant implémentées dans *Ginkgo*, or les fonctions `initialize`, `step_1` et `step_2` du *GC* de *Ginkgo* portent sur des matrices denses: les matrices creuses sont convertis en matrices denses (*Ginkgo* impose et implémente des [*constructeurs*](https://en.wikipedia.org/wiki/Constructor_(object-oriented_programming)) de conversion dans tous les sens), ce qui implique que les matrices denses obtenues contiennent potentiellement un nombre conséquent de zéro et occupent un espace mémoire en conséquence...
+**Note**: *OpenCARP* travaille principalement sur des matrices creuses, pourtant implémentées dans *Ginkgo*, or les fonctions `initialize`, `step_1` et `step_2` du *GC* de *Ginkgo* portent sur des matrices denses: les matrices creuses sont converties en matrices denses (*Ginkgo* impose et implémente des [*constructeurs*](https://en.wikipedia.org/wiki/Constructor_(object-oriented_programming)) de conversion dans tous les sens), ce qui implique que les matrices denses obtenues contiennent potentiellement un nombre conséquent de zéro et occupent un espace mémoire important...
 
 Ainsi, les éléments à optimiser sont identifiés:
 
@@ -87,7 +87,7 @@ C'est sur l'implémentation dite de *référence* de *Ginkgo*
 - des trois méthodes du *GC* de *Ginkgo*, [`ginkgo/reference/solver/cg_kernels.cpp`](https://github.com/ginkgo-project/ginkgo/blob/49242ff89af1e695d7794f6d50ed9933024b66fe/reference/solver/cg_kernels.cpp), et
 - des matrices denses, [`ginkgo/reference/matrix/dense_kernels.cpp`](https://github.com/ginkgo-project/ginkgo/blob/49242ff89af1e695d7794f6d50ed9933024b66fe/reference/matrix/dense_kernels.cpp),
 
-que se sont portées les *optimisations polyédriques*. Ces optimisations se limitent, actuellement, aux CPUs et ont été comparées à celles effectuées avec *OpenMP*, servant de références.
+que se sont portées les *optimisations polyédriques*. Ces optimisations se limitent, actuellement, aux CPUs et ont été comparées à celles effectuées avec *OpenMP*, servant de référence.
 
 Deux outils ont été utilisés:
 
@@ -96,9 +96,9 @@ Deux outils ont été utilisés:
 
 #### LLVM/Polly
 
-Le travail avec *LLVM/Polly* est des plus simples et constitue l'idéal promu par les concepteurs des *optimisations polyédriques*: le seul travail du développeur se borne à lancer la compilation, en activant les options nécessaires, avec, au pire, comme modification de son code, l'ajout de balise, pour aider le compilateur à identifier les *SCoP*, pour optimiser son code. La documentation de *LLVM/Polly* instruit sur les options à utiliser pour le compilateur *[C](https://en.cppreference.com/w/c)/[C++](https://en.cppreference.com/w/)* [*Clang*](https://clang.llvm.org/): [*Using Polly with Clang*](https://polly.llvm.org/docs/UsingPollyWithClang.html).
+Le travail avec *LLVM/Polly* est des plus simples et constitue l'idéal promu par les concepteurs des *optimisations polyédriques*: le seul travail du développeur se borne à lancer la compilation, en activant les options nécessaires, avec, au pire, comme modification de son code l'ajout de balises pour aider le compilateur à identifier les *SCoP*. La documentation de *LLVM/Polly* indique les options à utiliser pour le compilateur *[C](https://en.cppreference.com/w/c)/[C++](https://en.cppreference.com/w/)* [*Clang*](https://clang.llvm.org/): [*Using Polly with Clang*](https://polly.llvm.org/docs/UsingPollyWithClang.html).
 
-Les options de *LLVM/Polly* utilisées sont:
+Les options de *LLVM/Polly* que nous avons utilisées sont:
 
 ```
 -Wno-unused-command-line-argument -mllvm -polly -mllvm -polly-dependences-computeout=0 -mllvm -polly-vectorizer=stripmine -mllvm -polly-parallel
@@ -112,26 +112,26 @@ target_compile_options(ginkgo_reference PRIVATE "SHELL:-Wno-unused-command-line-
 
 **Notes**:
 
-- Utiliser *LLVM/Polly* sur les implémentations optimisées pour *CUDA* ou *OpenMP* provoquent des erreurs à leurs exécutions (i.e. leurs compilations avec *LLVM/Polly* activé se déroulent comme un charme).
-- Pour connaître les *SCoP* identifiés par *LLVM/Polly*, ajouter les options `-mllvm -polly-export` décrit comme:
+- Utiliser *LLVM/Polly* sur les implémentations optimisées pour *CUDA* ou *OpenMP* provoque des erreurs à l'exécution (mais la compilation avec *LLVM/Polly* activé se déroule comme un charme).
+- Pour connaître les *SCoP* identifiés par *LLVM/Polly*, ajouter les options `-mllvm -polly-export`, décrit comme:
 
   > Polly - Export Scops as JSON (Writes a .jscop file for each Scop)
 
-  Mais cet option plante *Clang* pour ses versions 15.x: pour l'utiliser, il faut passer aux versions strictement supérieures à 15.x de *Clang*. De plus, cet option gère mal les noms des fichiers générés: il faut l'appliquer avec parcimonie...
+  Mais cette option plante *Clang* pour ses versions 15.x: pour l'utiliser, il faut passer aux versions strictement supérieures à 15.x de *Clang*. De plus, cet option gère mal les noms des fichiers générés: il faut l'appliquer avec parcimonie...
 
-- *LLVM/Polly* a l'avantage d'être indépendant du langage de programmation utilisé par le programmeur: *LLVM/Polly* travaille sur les *représentations intermédiaires* ou [*IR*](https://en.wikipedia.org/wiki/Intermediate_representation), générées par le compilateur, responsable de la validation de la syntaxe.
+- *LLVM/Polly* a l'avantage d'être indépendant du langage de programmation utilisé par le programmeur: *LLVM/Polly* travaille sur les *représentations intermédiaires* ou [*IR*](https://en.wikipedia.org/wiki/Intermediate_representation) générées par le compilateur, responsable de la validation de la syntaxe.
 - Certaines fonctions impliquées dans le solveur *GC* de *Ginkgo* ne respectant pas les critères du *SCoP* (e.g. `step_1` et `step_2`), ne pouvant donc pas être optimisées par *LLVM/Polly* ont été reformulées: voire la section [PLUTO](#pluto) sur la fonction `step_1` pour plus de détail.
 - *LLVM/Polly* n'est qu'un des projets de [*The LLVM Compiler Infrastructure*](https://llvm.org/).
 - *LLVM/Polly* passe par *OpenMP* pour la parallélisation et la vectorisation.
 
 #### PLUTO
 
-*PLUTO* représente probablement l'état de l'art des *optimisations polyédriques*: *PLUTO* regroupe la majorité des outils développés, donc des recherches, sur le sujet. Ses caractéristiques:
+*PLUTO* représente probablement l'état de l'art des *optimisations polyédriques*: *PLUTO* regroupe la majorité des outils développés, donc des recherches, sur le sujet. Ses caractéristiques sont:
 
 - L'utilisateur doit baliser (avec les directives `#pragma scop` et `#pragma endscop`) son code pour instruire *PLUTO* des *SCoP*.
-- *PLUTO* n'est pas intégré à un compilateur.
-- *PLUTO* travaille sur le code source, ce qui le rend dépendant de la syntaxe du langage de programmation utilisé. Pour l'analyse syntaxique, *PLUTO* offre le choix entre [*Clan*](https://icps.u-strasbg.fr/~bastoul/development/clan/docs/clan.html) et [*Pet*](https://repo.or.cz/w/pet.git). *Pet* s'appuie sur *Clang* et offre un support complet du *C/C++* alors que *Clan* se limite à un *C* bridé. Cependant, l'utilisation de *Pet* par *PLUTO*, vers juin 2023, était impossible: ça ne fonctionnait tout simplement pas. **Note**: Alors que j'essayais d'améliorer l'intégration de *Pet* dans *PLUTO*, les auteurs de *PLUTO*, après des années d'inactivités sur leur [*github*](https://github.com/bondhugula/pluto), ont entrepris, entre autre, les mêmes travaux. [Une version stable](https://github.com/bondhugula/pluto/releases/download/0.12.0/pluto-0.12.0.tar.gz) de *PLUTO* est disponible depuis novembre 2023. Je ne l'ai pas, encore, testée.
-- L'utilisation de *PLUTO* est un tantinet peu fastidieuse:
+- *PLUTO* est un compilateur *source-à-source*.
+- *PLUTO* travaille sur le code source, ce qui le rend dépendant de la syntaxe du langage de programmation utilisé. Pour l'analyse syntaxique, *PLUTO* offre le choix entre [*Clan*](https://icps.u-strasbg.fr/~bastoul/development/clan/docs/clan.html) et [*Pet*](https://repo.or.cz/w/pet.git). *Pet* s'appuie sur *Clang* et offre un support complet du *C/C++* alors que *Clan* se limite à un *C* bridé. Cependant, l'utilisation de *Pet* par *PLUTO*, vers juin 2023, était impossible: ça ne fonctionnait tout simplement pas. **Note**: Alors que j'essayais d'améliorer l'intégration de *Pet* dans *PLUTO*, les auteurs de *PLUTO*, après des années d'inactivité sur leur [*github*](https://github.com/bondhugula/pluto), ont entrepris, entre autre, les mêmes travaux. [Une version stable](https://github.com/bondhugula/pluto/releases/download/0.12.0/pluto-0.12.0.tar.gz) de *PLUTO* est disponible depuis novembre 2023. Je ne l'ai pas, encore, testée.
+- L'utilisation de *PLUTO* est un peu fastidieuse:
 
   * Extraire le code à optimiser et le traduire dans un *C* supporté par *PLUTO*,
   * Réintégrer, en l'adaptant à la syntaxe supportée par code d'origine, le code optimisé généré par *PLUTO*.
@@ -219,11 +219,11 @@ Ce fut implacable: ni *LLVM/Polly*, ni *PLUTO* n'ont pu, et de très loin, rival
 
 ### Algorithmiques
 
-Constatant que la majorité des opérations impliquées dans le solveur *CG* de *Ginkgo* peut être optimisée si les matrices denses sont traitées par colonne plutôt que par ligne, une reformulation algorithmique a été effectuée. Tout en sachant que *Ginkgo* stockent ses matrices denses par ligne, et, donc, les parcourir par colonne dégraderont fortement les performances à cause des défauts de caches. Ces dégradations sont amplifiées lorsque les traitements sont parallélisés. **Note**: Pour éviter le problème de défaut de caches, il faut ajouter des opérations de transpositions coûteuses et en temps de calcul et en espace mémoire; une option inenvisageable lorsque le but est d'optimiser.
+Constatant que la majorité des opérations impliquées dans le solveur *CG* de *Ginkgo* peut être optimisée si les matrices denses sont traitées par colonne plutôt que par ligne, une reformulation algorithmique a été effectuée. Tout en sachant que *Ginkgo* stocke ses matrices denses par ligne, et, donc, les parcourir par colonne dégraderont fortement les performances à cause des défauts de caches. Ces dégradations sont amplifiées lorsque les traitements sont parallélisés. **Note**: Pour éviter le problème de défaut de caches, il faut ajouter des opérations de transpositions coûteuses en temps de calcul et en espace mémoire; une option inenvisageable lorsque le but est d'optimiser.
 
-Lors de la reformulation, en exploitant les propriétés algébriques des opérations d'addition et de multiplication sur les éléments neutres (i.e. `0` et `1`), par, certes, l'ajout de tests et une complexité du code, mais qui peuvent éviter de lancer des calculs sur de potentiel vaste volume de données.
+Lors de la reformulation, en exploitant les propriétés algébriques des opérations d'addition et de multiplication sur les éléments neutres (i.e. `0` et `1`) par l'ajout de tests (mais un code plus complexe), nous avons évité de lancer des calculs sur de potentiels vastes volumes de données.
 
-Par exemples:
+Par exemple:
 
 - La fonction [`compute_norm2`](https://github.com/ginkgo-project/ginkgo/blob/49242ff89af1e695d7794f6d50ed9933024b66fe/reference/matrix/dense_kernels.cpp#L347) a été reformulée en:
 
@@ -339,19 +339,19 @@ Avec les outils de mesure de performances fournis par *Ginkgo*:
 
 - Les versions séquentielles reformulées de:
 
-  * `compute_norm2_dispatch` est `2,158910204` plus rapide,
-  * `compute_conj_dot_dispatch` est `2,059145506` plus rapide,
-  * `step_1` est `14,473490735` plus rapide,
-  * `step_2` est `7,1691806` plus rapide
+  * `compute_norm2_dispatch` est `2,158910204x` plus rapide,
+  * `compute_conj_dot_dispatch` est `2,059145506x` plus rapide,
+  * `step_1` est `14,473490735x` plus rapide,
+  * `step_2` est `7,1691806x` plus rapide
 
   que leurs versions séquentielles de référence.
 
 - Les versions reformulées optimisées avec *OpenMP*:
 
-  * `compute_norm2_dispatch` est `3,526641558` plus lente,
-  * `compute_conj_dot_dispatch` est `2,508054004` plus lente,
-  * `step_1` est `1,261263298` plus lente,
-  * `step_2` est `1,459083835` plus lente
+  * `compute_norm2_dispatch` est `3,526641558x` plus lente,
+  * `compute_conj_dot_dispatch` est `2,508054004x` plus lente,
+  * `step_1` est `1,261263298x` plus lente,
+  * `step_2` est `1,459083835x` plus lente
 
   que leurs versions optimisées avec *OpenMP* de référence.
 
@@ -359,10 +359,10 @@ En dépit des défauts de caches causés par les parcours des matrices denses pa
 
 **Notes**:
 
-- Les versions séquentielles reformulées de `step_1` et `step_2` ne sont, respectivement, que `1,233304792` et `1,289617482` plus lentes que leurs versions optimisées par *OpenMP* de référence.
+- Les versions séquentielles reformulées de `step_1` et `step_2` ne sont, respectivement, que `1,233304792x` et `1,289617482x` plus lentes que leurs versions optimisées par *OpenMP* de référence.
 - Les concepteurs de *Ginkgo*, depuis 2021, songent à fournir plusieurs modes de stockage des matrices denses: [Clarify the behavioral differences between a dense matrix and a multivector](https://github.com/ginkgo-project/ginkgo/issues/796). Le débat est encore ouvert.
 
-## Optimisations de OpenCARP
+## Optimisations d'openCARP
 
 ### Exploiter les optimisations pour *GPUs* par *PETSc*
 
@@ -372,13 +372,13 @@ OpenCARP impose des interfaces aux
 - [matrices](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/fem/slimfem/src/SF_abstract_matrix.h) et
 - [solveurs](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/fem/slimfem/src/SF_abstract_matrix.h).
 
-Ces interfaces sont implémentées soit avec *PETSc*, soit avec *Ginkgo*. L'implémentation de *OpenCARP* avec *PETSc* n'exploite actuellement que les *CPUs*. Cependant, *PETSc* dispose, au moins pour les matrices et les vecteurs, des implémentations exploitant les *GPUs*: [*GPU Support Roadmap*](https://petsc.org/release/overview/gpu_roadmap/).
+Ces interfaces sont implémentées soit avec *PETSc*, soit avec *Ginkgo*. L'implémentation d'*openCARP* avec *PETSc* n'exploite actuellement que les *CPUs*. Cependant, *PETSc* dispose, au moins pour les matrices et les vecteurs, des implémentations exploitant les *GPUs*: [*GPU Support Roadmap*](https://petsc.org/release/overview/gpu_roadmap/).
 
 Trois implémentations ont été effectuées pour tester les offres *GPUs* de *PETSc*:
 
 - Une implémentation spécifique pour *CUDA*,
 - une implémentation spécifique pour [*Kokkos*](https://kokkos.org/),
-- une implémentation générique où il est possible de sélectionner et le type vecteur et le type de matrice à la ligne de commande. Les types de vecteur supportés sont présentés ici: [`VecType`](https://petsc.org/release/manualpages/Vec/VecType/); et les types de matrices supportées sont présentés là: [`MatType`](https://petsc.org/main/manualpages/Mat/MatType/). Pour utiliser l'implémentation générique, il faut ajouter à la ligne de commande de *OpenCARP*, par exemple pour avoir des vecteurs [`cuda`](https://petsc.org/release/manualpages/Vec/VECCUDA/) et des matrices [`aijcusparse`](https://petsc.org/main/manualpages/Mat/MATAIJCUSPARSE/):
+- une implémentation générique où il est possible de sélectionner et le type vecteur et le type de matrice à la ligne de commande. Les types de vecteur supportés sont présentés ici: [`VecType`](https://petsc.org/release/manualpages/Vec/VecType/); et les types de matrices supportées sont présentés là: [`MatType`](https://petsc.org/main/manualpages/Mat/MatType/). Pour utiliser l'implémentation générique, il faut ajouter à la ligne de commande d'*openCARP*, par exemple pour avoir des vecteurs [`cuda`](https://petsc.org/release/manualpages/Vec/VECCUDA/) et des matrices [`aijcusparse`](https://petsc.org/main/manualpages/Mat/MATAIJCUSPARSE/):
 
 ```shell
 + \
@@ -386,9 +386,9 @@ Trois implémentations ont été effectuées pour tester les offres *GPUs* de *P
 -vec_type cuda
 ```
 
-Les trois implémentations ont été validées en effectuant les tests dits de [*régression*](https://git.opencarp.org/openCARP/experiments/-/blob/master/TESTS.md) fournis par *OpenCARP*.
+Les trois implémentations ont été validées en effectuant les tests dits de [*régression*](https://git.opencarp.org/openCARP/experiments/-/blob/master/TESTS.md) fournis par *openCARP*.
 
-Contrairement à ce qui est attendu, les résultats ont montré de fortes dégradations (parfois d'un facteur `10`) des performances de *OpenCARP* lorsque les accélérations promises par *GPUs* de *PETSc* sont utilisées. En utilisant les options de [*profiling*](https://petsc.org/release/manual/profiling/) de *PETSc*, par exemple sur l'outil [`bench.cc`](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/physics/limpet/src/bench.cc) de *OpenCARP* pour mesurer les performances des *modèles ioniques* et qui n'utilise de *PETSc* que les vecteurs:
+Contrairement à ce qui est attendu, les résultats ont montré de fortes dégradations (parfois d'un facteur `10x`) des performances d'*openCARP* lorsque l'exécution sur *GPUs* de *PETSc* est utilisée. En utilisant les options de [*profiling*](https://petsc.org/release/manual/profiling/) de *PETSc*, par exemple sur l'outil [`bench.cc`](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/physics/limpet/src/bench.cc) d'*openCARP* pour mesurer les performances des *modèles ioniques* et qui n'utilise de *PETSc* que les vecteurs:
 
 ```shell
 #-------------------------------------------------------------------------------
@@ -563,9 +563,9 @@ Using Fortran linker: /opt/petsc/release/embedded/mpich/bin/mpif90
 -----------------------------------------
 ```
 
-Nous constatons que *PETSc* passe un temps conséquent à effectuer des copies entre *CPU* et *GPU*. Après analyse, ces copies résultent de l'utilisation de *PETSc* par *OpenCARP* et non d'un fonctionnement interne à *PETSc*:
+Nous constatons que *PETSc* passe un temps conséquent à effectuer des copies entre *CPU* et *GPU*. Après analyse, ces copies résultent de l'utilisation de *PETSc* par *openCARP* et non d'un fonctionnement interne à *PETSc*:
 
-- L'interface des vecteurs de *OpenCARP* propose quatre fonctions:
+- L'interface des vecteurs d'*openCARP* propose quatre fonctions:
 
   * `ptr`, implémentée avec *PETSc* par [`VecGetArray`](https://petsc.org/release/manualpages/Vec/VecGetArray/),
   * `release_ptr`, implémentée avec *PETSc* par [`VecRestoreArray`](https://petsc.org/release/manualpages/Vec/VecRestoreArray/),
@@ -574,25 +574,25 @@ Nous constatons que *PETSc* passe un temps conséquent à effectuer des copies e
 
   `VecGetArray` a pour fonction de:
 
-  > Returns a pointer to a contiguous array that contains this MPI processes’s portion of the vector data
+  > *Returns a pointer to a contiguous array that contains this MPI processes’s portion of the vector data*
 
   et
 
-  > For the standard PETSc vectors, [`VecGetArray()`](https://petsc.org/release/manualpages/Vec/VecGetArray/) returns a pointer to the local data array and does not use any copies. If the underlying vector data is not stored in a contiguous array this routine will copy the data to a contiguous array and return a pointer to that. You MUST call [`VecRestoreArray()`](https://petsc.org/release/manualpages/Vec/VecRestoreArray/) when you no longer need access to the array.
+  > *For the standard PETSc vectors, [`VecGetArray()`](https://petsc.org/release/manualpages/Vec/VecGetArray/) returns a pointer to the local data array and does not use any copies. If the underlying vector data is not stored in a contiguous array this routine will copy the data to a contiguous array and return a pointer to that. You MUST call [`VecRestoreArray()`](https://petsc.org/release/manualpages/Vec/VecRestoreArray/) when you no longer need access to the array.*
 
   *OpenCARP* propose ces fonctions car, par exemple dans les *modèles ioniques*, les calculs ne sont pas effectués avec les vecteurs instanciés de la classe abstraite [`abstract_vector`](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/fem/slimfem/src/SF_abstract_vector.h#L54) implémentée avec la classe [`petsc_vector`](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/numerics/petsc/SF_petsc_vector.h), mais avec des vecteurs de la classe [`vector`](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/fem/slimfem/src/SF_vector.h): les `petsc_vector` servent principalement de tampon avec les `vector`. Comme les vecteurs *PETSc* sont, en principe, en mémoire *GPU*, les appels à `VecGetArray` effectuent des copies du GPU vers le CPU; et `VecRestoreArray` fait le chemin contraire... Comme la documentation sur `VecGetArray` est assez imprécise, il faut consulter la documentation de [`VecGetArrayAndMemType`](https://petsc.org/release/manualpages/Vec/VecGetArrayAndMemType/) pour être au clair:
 
-  > Like [`VecGetArray()`](https://petsc.org/release/manualpages/Vec/VecGetArray/), but if this is a standard device vector (e.g., [`VECCUDA`](https://petsc.org/release/manualpages/Vec/VECCUDA/)), the returned pointer will be a device pointer to the device memory that contains this MPI processes’s portion of the vector data.
+  > *Like [`VecGetArray()`](https://petsc.org/release/manualpages/Vec/VecGetArray/), but if this is a standard device vector (e.g., [`VECCUDA`](https://petsc.org/release/manualpages/Vec/VECCUDA/)), the returned pointer will be a device pointer to the device memory that contains this MPI processes’s portion of the vector data.*
 
   et
 
-  > Device data is guaranteed to have the latest value. Otherwise, when this is a host vector (e.g., [`VECMPI`](https://petsc.org/release/manualpages/Vec/VECMPI/)), this routine functions the same as [`VecGetArray()`](https://petsc.org/release/manualpages/Vec/VecGetArray/) and returns a host pointer.
+  > *Device data is guaranteed to have the latest value. Otherwise, when this is a host vector (e.g., [`VECMPI`](https://petsc.org/release/manualpages/Vec/VECMPI/)), this routine functions the same as [`VecGetArray()`](https://petsc.org/release/manualpages/Vec/VecGetArray/) and returns a host pointer.*
   >
-  > For [`VECKOKKOS`](https://petsc.org/release/manualpages/Vec/VECKOKKOS/), if Kokkos is configured without device (e.g., use serial or openmp), per this function, the vector works like [`VECSEQ`](https://petsc.org/release/manualpages/Vec/VECSEQ/)/[`VECMPI`](https://petsc.org/release/manualpages/Vec/VECMPI/); otherwise, it works like [`VECCUDA`](https://petsc.org/release/manualpages/Vec/VECCUDA/) or [`VECHIP`](https://petsc.org/release/manualpages/Vec/VECHIP/) etc.
+  > *For [`VECKOKKOS`](https://petsc.org/release/manualpages/Vec/VECKOKKOS/), if Kokkos is configured without device (e.g., use serial or openmp), per this function, the vector works like [`VECSEQ`](https://petsc.org/release/manualpages/Vec/VECSEQ/)/[`VECMPI`](https://petsc.org/release/manualpages/Vec/VECMPI/); otherwise, it works like [`VECCUDA`](https://petsc.org/release/manualpages/Vec/VECCUDA/) or [`VECHIP`](https://petsc.org/release/manualpages/Vec/VECHIP/) etc.*
   >
-  > Use [`VecRestoreArrayAndMemType()`](https://petsc.org/release/manualpages/Vec/VecRestoreArrayAndMemType/) when the array access is no longer needed.
+  > *Use [`VecRestoreArrayAndMemType()`](https://petsc.org/release/manualpages/Vec/VecRestoreArrayAndMemType/) when the array access is no longer needed.*
 
-  **Ces transferts sont imputables à la logique permise par l'interface des vecteurs *OpenCARP*: des composants constituant *OpenCARP* ont implémenté leur propre vecteur plutôt que de s'accorder sur une seule implémentation.**
+  **Ces transferts sont imputables à la logique permise par l'interface des vecteurs *openCARP*: des composants constituant *openCARP* ont implémenté leur propre vecteur plutôt que de s'accorder sur une seule implémentation.**
 
 - Cependant, les développeurs de *PETSc* n'ont probablement pas pris en compte ces problèmes de transfert *CPU*<->*GPU* à toutes les fonctions qu'ils ont implémentées... Par exemple pour la fonction [`VecEqual`](https://petsc.org/release/src/vec/vec/utils/vinv.c.html#VecEqual):
 
