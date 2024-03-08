@@ -635,6 +635,4 @@ PetscErrorCode VecEqual(Vec vec1, Vec vec2, PetscBool *flg)
 
 Les défis qu'imposent la [*portabilité*](https://performanceportability.org/), le *multi-GPUs* et la hiérarchie mémoire pourraient être solubles par l'utilisation des [*algorithmes parallèles de la STL*](https://en.cppreference.com/w/cpp/algorithm), du *Global Address Space* et du *task-based programming*: [*HPx*](https://hpx.stellar-group.org/).
 
-## Annexes
-
-### Description de l'arborescence *github*
+## Description de l'arborescence *github*
