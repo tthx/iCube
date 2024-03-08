@@ -85,7 +85,7 @@ Ainsi, les éléments à optimiser sont identifiés:
 C'est sur l'implémentation dite de *référence* de *Ginkgo*
 
 - des trois méthodes du *GC* de *Ginkgo*, [`ginkgo/reference/solver/cg_kernels.cpp`](https://github.com/ginkgo-project/ginkgo/blob/49242ff89af1e695d7794f6d50ed9933024b66fe/reference/solver/cg_kernels.cpp), et
-- des matrices creuses, [`ginkgo/reference/matrix/dense_kernels.cpp`](https://github.com/ginkgo-project/ginkgo/blob/49242ff89af1e695d7794f6d50ed9933024b66fe/reference/matrix/dense_kernels.cpp),
+- des matrices denses, [`ginkgo/reference/matrix/dense_kernels.cpp`](https://github.com/ginkgo-project/ginkgo/blob/49242ff89af1e695d7794f6d50ed9933024b66fe/reference/matrix/dense_kernels.cpp),
 
 que se sont portées les *optimisations polyédriques*. Ces optimisations se limitent, actuellement, aux CPUs et ont été comparées à celles effectuées avec *OpenMP* qui servent donc de références.
 
@@ -339,19 +339,19 @@ Avec les outils de mesure de performances fournis par *Ginkgo*:
 
 - Les versions séquentielles reformulées de:
 
-  * `compute_norm2_dispatch` est 2,158910204 plus rapide,
-  * `compute_conj_dot_dispatch` est 2,059145506 plus rapide,
-  * `step_1` est 14,473490735 plus rapide,
-  * `step_2` est 7,1691806 plus rapide
+  * `compute_norm2_dispatch` est `2,158910204` plus rapide,
+  * `compute_conj_dot_dispatch` est `2,059145506` plus rapide,
+  * `step_1` est `14,473490735` plus rapide,
+  * `step_2` est `7,1691806` plus rapide
 
   que leurs versions séquentielles de référence.
 
 - Les versions reformulées optimisées avec *OpenMP*:
 
-  * `compute_norm2_dispatch` est 3,526641558 plus lente,
-  * `compute_conj_dot_dispatch` est 2,508054004 plus lente,
-  * `step_1` est 1,261263298 plus lente,
-  * `step_2` est 1,459083835 plus lente
+  * `compute_norm2_dispatch` est `3,526641558` plus lente,
+  * `compute_conj_dot_dispatch` est `2,508054004` plus lente,
+  * `step_1` est `1,261263298` plus lente,
+  * `step_2` est `1,459083835` plus lente
 
   que leurs versions optimisées avec *OpenMP* de référence.
 
@@ -359,7 +359,7 @@ En dépit des défauts de caches causés par les parcours des matrices denses pa
 
 **Notes**:
 
-- Les versions séquentielles reformulées de `step_1` et `step_2` ne sont, respectivement, que 1,233304792 et 1,289617482 plus lentes que leurs versions optimisées par *OpenMP* de référence.
+- Les versions séquentielles reformulées de `step_1` et `step_2` ne sont, respectivement, que `1,233304792` et `1,289617482` plus lentes que leurs versions optimisées par *OpenMP* de référence.
 - Les concepteurs de *Ginkgo*, depuis 2021, songent à fournir plusieurs modes de stockage des matrices denses: [Clarify the behavioral differences between a dense matrix and a multivector](https://github.com/ginkgo-project/ginkgo/issues/796). Le débat est encore ouvert.
 
 ## Optimisations de OpenCARP
