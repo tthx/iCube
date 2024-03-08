@@ -364,8 +364,211 @@ En dépit des défauts de caches causés par les parcours des matrices denses pa
 
 ## Optimisations de OpenCARP
 
+### Exploiter les optimisations pour *GPUs* par *PETSc*
+
+OpenCARP impose des interfaces aux
+
+- [vecteurs](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/fem/slimfem/src/SF_abstract_vector.h),
+- [matrices](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/fem/slimfem/src/SF_abstract_matrix.h) et
+- [solveurs](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/fem/slimfem/src/SF_abstract_matrix.h).
+
+Ces interfaces sont implémentées soit avec *PETSc*, soit avec *Ginkgo*. L'implémentation de *OpenCARP* avec *PETSc* n'exploite actuellement que les *CPUs*. Cependant, *PETSc* dispose, au moins pour les matrices et les vecteurs, des implémentations exploitant les *GPUs*: [*GPU Support Roadmap*](https://petsc.org/release/overview/gpu_roadmap/).
+
+Trois implémentations ont été effectuées pour tester les offres *GPUs* de *PETSc*:
+
+- Une implémentation spécifique pour *CUDA*,
+- une implémentation spécifique pour [*Kokkos*](https://kokkos.org/),
+- une implémentation générique où il est possible de sélectionner et le type vecteur et le type de matrice à la ligne de commande. Les types de vecteur supportés sont présentés ici: [`VecType`](https://petsc.org/release/manualpages/Vec/VecType/); et les types de matrices supportées sont présentés là: [`MatType`](https://petsc.org/main/manualpages/Mat/MatType/). Pour utiliser l'implémentation générique, il faut ajouter à la ligne de commande de *OpenCARP*, par exemple pour avoir des vecteurs [`cuda`](https://petsc.org/release/manualpages/Vec/VECCUDA/) et des matrices [`aijcusparse`](https://petsc.org/main/manualpages/Mat/MATAIJCUSPARSE/):
+
+```shell
++ \
+-mat_type aijcusparse \
+-vec_type cuda
+```
+
+Les trois implémentations ont été validées en effectuant les tests dits de [*régression*](https://git.opencarp.org/openCARP/experiments/-/blob/master/TESTS.md) fournis par *OpenCARP*.
+
+Contrairement à ce qui est attendu, les résultats ont montré de fortes dégradations (parfois d'un facteur `10`) des performances de *OpenCARP* lorsque les accélérations promises par *GPUs* de *PETSc* sont utilisées. En utilisant les options de [*profiling*](https://petsc.org/release/manual/profiling/) de *PETSc*, par exemple sur l'outil [`bench.cc`](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/physics/limpet/src/bench.cc) de *OpenCARP* pour mesurer les performances des *modèles ioniques* et qui n'utilise de *PETSc* que les vecteurs:
+
+```shell
+#-------------------------------------------------------------------------------
+#                             bench: Plugin ISAC_Hu
+#-------------------------------------------------------------------------------
+
+/opt/openCARP/master/embedded/mpich/generic/bin/bench \
+  --imp=LuoRudy91 \
+  --plug-in=ISAC_Hu \
+  --fout=ISAC_Hu/ISAC_Hu \
+  --bin \
+  --no-trace \
+  --validate \
+  --duration 1000 + \
+  -log_view \
+  -log_view_memory \
+  -log_view_gpu_time \
+  -mat_type aijcusparse \
+  -vec_type cuda
+
+
+*** GIT tag:              386fad2
+*** GIT hash:             386fad226eed145b2c3e9a7caeeca5fea0f9789f
+*** GIT repo:             https://git.opencarp.org/openCARP/openCARP.git
+*** dependency commits:
+
+Plug-in: ISAC_Hu
+
+Outputting the following quantities at each time:
+      Time          Vm      Lambda        Iion
+
+Running simulation on target mlir-cuda
+
+
+
+All done!
+
+
+setup time          0.074113 s
+initialization time 0.017918 s
+main loop time      3.388433 s
+total ode time      3.362835 s
+
+mn/avg/mx loop time 0.026053 0.033884 61.257151 ms
+mn/avg/mx ODE time  0.025972 0.033628 61.202800 ms
+real time factor    0.297368
+```
+
+Les options de *profiling* de *PETSc* nous indiquent:
+
+```shell
+------------------------------------------------------------------
+ PETSc Performance Summary:
+------------------------------------------------------------------
+
+
+
+      ##########################################################
+      #                                                        #
+      #                       WARNING!!!                       #
+      #                                                        #
+      #   This code was run with -log_view_gpu_time            #
+      #   This provides accurate timing within the GPU kernels #
+      #   but can slow down the entire computation by a        #
+      #   measurable amount. For fastest runs we recommend     #
+      #   not using this option.                               #
+      #                                                        #
+      ##########################################################
+
+
+/opt/openCARP/master/embedded/mpich/generic/bin/bench on a  named 55a3a2a1c071 with 1 processor, by Unknown Mon Mar  4 16:27:44 2024
+Using Petsc Release Version 3.20.5, unknown
+
+                         Max       Max/Min     Avg       Total
+Time (sec):           3.487e+00     1.000   3.487e+00
+Objects:              0.000e+00     0.000   0.000e+00
+Flops:                1.000e+02     1.000   1.000e+02  1.000e+02
+Flops/sec:            2.867e+01     1.000   2.867e+01  2.867e+01
+Memory (bytes):       1.051e+05     1.000   1.051e+05  1.051e+05
+MPI Msg Count:        0.000e+00     0.000   0.000e+00  0.000e+00
+MPI Msg Len (bytes):  0.000e+00     0.000   0.000e+00  0.000e+00
+MPI Reductions:       0.000e+00     0.000
+
+Flop counting convention: 1 flop = 1 real number operation of type (multiply/divide/add/subtract)
+                            e.g., VecAXPY() for real vectors of length N --> 2N flops
+                            and VecAXPY() for complex vectors of length N --> 8N flops
+
+Summary of Stages:   ----- Time ------  ----- Flop ------  --- Messages ---  -- Message Lengths --  -- Reductions --
+                        Avg     %Total     Avg     %Total    Count   %Total     Avg         %Total    Count   %Total
+ 0:      Main Stage: 3.4875e+00 100.0%  1.0000e+02 100.0%  0.000e+00   0.0%  0.000e+00        0.0%  0.000e+00   0.0%
+
+------------------------------------------------------------------------------------------------------------------------
+See the 'Profiling' chapter of the users' manual for details on interpreting output.
+Phase summary info:
+   Count: number of times phase was executed
+   Time and Flop: Max - maximum over all processors
+                  Ratio - ratio of maximum to minimum over all processors
+   Mess: number of messages sent
+   AvgLen: average message length (bytes)
+   Reduct: number of global reductions
+   Global: entire computation
+   Stage: stages of a computation. Set stages with PetscLogStagePush() and PetscLogStagePop().
+      %T - percent time in this phase         %F - percent flop in this phase
+      %M - percent messages in this phase     %L - percent message lengths in this phase
+      %R - percent reductions in this phase
+   Total Mflop/s: 10e-6 * (sum of flop over all processors)/(max time over all processors)
+   Memory usage is summed over all MPI processes, it is given in mega-bytes
+   Malloc Mbytes: Memory allocated and kept during event (sum over all calls to event). May be negative
+   EMalloc Mbytes: extra memory allocated during event and then freed (maximum over all calls to events). Never negative
+   MMalloc Mbytes: Increase in high water mark of allocated memory (sum over all calls to event). Never negative
+   RMI Mbytes: Increase in resident memory (sum over all calls to event)
+   GPU Mflop/s: 10e-6 * (sum of flop on GPU over all processors)/(max GPU time over all processors)
+   CpuToGpu Count: total number of CPU to GPU copies per processor
+   CpuToGpu Size (Mbytes): 10e-6 * (total size of CPU to GPU copies per processor)
+   GpuToCpu Count: total number of GPU to CPU copies per processor
+   GpuToCpu Size (Mbytes): 10e-6 * (total size of GPU to CPU copies per processor)
+   GPU %F: percent flops on GPU in this event
+------------------------------------------------------------------------------------------------------------------------
+Event                Count      Time (sec)     Flop                              --- Global ---  --- Stage ----  Total  Malloc EMalloc MMalloc RMI   GPU    - CpuToGpu -   - GpuToCpu - GPU
+                   Max Ratio  Max     Ratio   Max  Ratio  Mess   AvgLen  Reduct  %T %F %M %L %R  %T %F %M %L %R Mflop/s Mbytes Mbytes Mbytes Mbytes Mflop/s Count   Size   Count   Size  %F
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--- Event Stage 0: Main Stage
+
+PetscBarrier           2 1.0 3.9924e-05 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0     0       0       0       0       0      0 0.00e+00    0 0.00e+00  0
+VecSet              1106 1.0 5.0963e-02 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  1  0  0  0  0   1  0  0  0  0     0     0       0       0       0       0      0 0.00e+00    0 0.00e+00  0
+VecCUDACopyTo        100 1.0 1.6782e-03 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0     0       0       0       0       0    100 8.00e-04    0 0.00e+00  0
+VecCUDACopyFrom     1203 1.0 2.0490e-02 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  1  0  0  0  0   1  0  0  0  0     0     0       0       0       0       0      0 0.00e+00 1203 9.62e-03  0
+DCtxCreate             2 1.0 4.6355e-05 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0     0       0       0       0       0      0 0.00e+00    0 0.00e+00  0
+DCtxDestroy            2 1.0 4.7569e-05 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0     0       0       0       0       0      0 0.00e+00    0 0.00e+00  0
+DCtxSetUp              2 1.0 4.0234e-05 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0     0       0       0       0       0      0 0.00e+00    0 0.00e+00  0
+DCtxSetDevice          2 1.0 4.7570e-05 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  0  0  0  0  0   0  0  0  0  0     0     0       0       0       0       0      0 0.00e+00    0 0.00e+00  0
+DCtxSync            2409 1.0 2.9572e-02 1.0 0.00e+00 0.0 0.0e+00 0.0e+00 0.0e+00  1  0  0  0  0   1  0  0  0  0     0     0       0       0       0       0      0 0.00e+00    0 0.00e+00  0
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Object Type          Creations   Destructions. Reports information only for process 0.
+
+--- Event Stage 0: Main Stage
+
+           Container     4              4
+              Vector     6              6
+  PetscDeviceContext     2              0
+========================================================================================================================
+Average time to get PetscTime(): 2.28e-08
+#PETSc Option Table entries:
+-log_view # (source: command line)
+-log_view_gpu_time # (source: command line)
+-log_view_memory # (source: command line)
+-mat_type aijcusparse # (source: command line)
+-options_left no # (source: code)
+-vec_type cuda # (source: command line)
+#End of PETSc Option Table entries
+Compiled without FORTRAN kernels
+Compiled with full precision matrices (default)
+sizeof(short) 2 sizeof(int) 4 sizeof(long) 8 sizeof(void*) 8 sizeof(PetscScalar) 8 sizeof(PetscInt) 4
+-----------------------------------------
+Libraries compiled on 2024-03-03 10:37:33 on 55a3a2a1c071
+Machine characteristics: Linux-6.8.0-7-lowlatency-x86_64-with-glibc2.35
+Using PETSc directory: /opt/petsc/release/embedded/mpich
+Using PETSc arch:
+-----------------------------------------
+
+Using C compiler: /opt/petsc/release/embedded/mpich/bin/mpicc -O3 -march=native -O3 -march=native
+Using Fortran compiler: /opt/petsc/release/embedded/mpich/bin/mpif90 -O3 -march=native -O3 -march=native
+-----------------------------------------
+
+Using include paths: -I/opt/petsc/release/embedded/mpich/include -I/usr/local/cuda-11.8/include
+-----------------------------------------
+
+Using C linker: /opt/petsc/release/embedded/mpich/bin/mpicc
+Using Fortran linker: /opt/petsc/release/embedded/mpich/bin/mpif90
+-----------------------------------------
+```
+
 ### Multi-GPU
 
 ### Task-based programming
 
 ### Algorithmiques du STL C++
+
+## Annexes
+
+### Description de l'arborescence *github*
