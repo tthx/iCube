@@ -563,6 +563,35 @@ Using Fortran linker: /opt/petsc/release/embedded/mpich/bin/mpif90
 -----------------------------------------
 ```
 
+Nous constatons que *PETSc* passe un temps conséquent à effectuer des copies entre *CPU* et *GPU*. Après analyse, ces copies résultent de l'utilisation de *PETSc* par *OpenCARP* et non d'un fonctionnement interne à *PETSc*:
+
+- L'interface des vecteurs de *OpenCARP* propose quatre fonctions:
+
+  * `ptr`, implémentée avec *PETSc* par [`VecGetArray`](https://petsc.org/release/manualpages/Vec/VecGetArray/),
+  * `release_ptr`, implémentée avec *PETSc* par [`VecRestoreArray`](https://petsc.org/release/manualpages/Vec/VecRestoreArray/),
+  * `const_ptr`, implémentée avec *PETSc* par [`VecGetArrayRead`](https://petsc.org/release/manualpages/Vec/VecGetArrayRead/),
+  * `const_release_ptr`, implémentée avec *PETSc* par [`VecRestoreArrayRead`](https://petsc.org/release/manualpages/Vec/VecRestoreArrayRead/).
+
+  `VecGetArray` a pour fonction de:
+
+  > Returns a pointer to a contiguous array that contains this MPI processes’s portion of the vector data
+
+  et
+
+  > For the standard PETSc vectors, [`VecGetArray()`](https://petsc.org/release/manualpages/Vec/VecGetArray/) returns a pointer to the local data array and does not use any copies. If the underlying vector data is not stored in a contiguous array this routine will copy the data to a contiguous array and return a pointer to that. You MUST call [`VecRestoreArray()`](https://petsc.org/release/manualpages/Vec/VecRestoreArray/) when you no longer need access to the array.
+
+  *OpenCARP* propose ces fonctions car, par exemple dans les *modèles ioniques*, les calculs ne sont pas effectués avec les vecteurs instanciés de la classe abstraite [`abstract_vector`](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/fem/slimfem/src/SF_abstract_vector.h#L54) implémentée avec la classe [`petsc_vector`](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/numerics/petsc/SF_petsc_vector.h), mais avec des vecteurs de la classe [`vector`](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/fem/slimfem/src/SF_vector.h): les `petsc_vector` servent principalement de tampon avec les `vector`. Comme les vecteurs *PETSc* sont, en principe, en mémoire *GPU*, les appels à `VecGetArray` effectuent des copies du GPU vers le CPU; et `VecRestoreArray` fait le chemin contraire... Comme la documentation sur `VecGetArray` est assez imprécise, il faut consulter la documentation de [`VecGetArrayAndMemType`](https://petsc.org/release/manualpages/Vec/VecGetArrayAndMemType/) pour être au clair:
+
+  > Like [`VecGetArray()`](https://petsc.org/release/manualpages/Vec/VecGetArray/), but if this is a standard device vector (e.g., [`VECCUDA`](https://petsc.org/release/manualpages/Vec/VECCUDA/)), the returned pointer will be a device pointer to the device memory that contains this MPI processes’s portion of the vector data.
+
+  et
+
+  > Device data is guaranteed to have the latest value. Otherwise, when this is a host vector (e.g., [`VECMPI`](https://petsc.org/release/manualpages/Vec/VECMPI/)), this routine functions the same as [`VecGetArray()`](https://petsc.org/release/manualpages/Vec/VecGetArray/) and returns a host pointer.
+  >
+  > For [`VECKOKKOS`](https://petsc.org/release/manualpages/Vec/VECKOKKOS/), if Kokkos is configured without device (e.g., use serial or openmp), per this function, the vector works like [`VECSEQ`](https://petsc.org/release/manualpages/Vec/VECSEQ/)/[`VECMPI`](https://petsc.org/release/manualpages/Vec/VECMPI/); otherwise, it works like [`VECCUDA`](https://petsc.org/release/manualpages/Vec/VECCUDA/) or [`VECHIP`](https://petsc.org/release/manualpages/Vec/VECHIP/) etc.
+  >
+  > Use [`VecRestoreArrayAndMemType()`](https://petsc.org/release/manualpages/Vec/VecRestoreArrayAndMemType/) when the array access is no longer needed.
+
 ### Multi-GPU
 
 ### Task-based programming
