@@ -592,11 +592,51 @@ Nous constatons que *PETSc* passe un temps conséquent à effectuer des copies e
   >
   > Use [`VecRestoreArrayAndMemType()`](https://petsc.org/release/manualpages/Vec/VecRestoreArrayAndMemType/) when the array access is no longer needed.
 
-### Multi-GPU
+  **Ces transferts sont imputables à la logique permise par l'interface des vecteurs *OpenCARP*: des composants constituant *OpenCARP* ont implémenté leur propre vecteur plutôt que de s'accorder sur une seule implémentation.**
 
-### Task-based programming
+- Cependant, les développeurs de *PETSc* n'ont probablement pas pris en compte ces problèmes de transfert *CPU*<->*GPU* à toutes les fonctions qu'ils ont implémentées... Par exemple pour la fonction [`VecEqual`](https://petsc.org/release/src/vec/vec/utils/vinv.c.html#VecEqual):
 
-### Algorithmiques du STL C++
+```c
+PetscErrorCode VecEqual(Vec vec1, Vec vec2, PetscBool *flg)
+{
+  const PetscScalar *v1, *v2;
+  PetscInt           n1, n2, N1, N2;
+  PetscBool          flg1;
+
+  PetscFunctionBegin;
+  PetscAssertPointer(flg, 3);
+  if (vec1 == vec2) *flg = PETSC_TRUE;
+  else {
+    PetscCall(VecGetSize(vec1, &N1));
+    PetscCall(VecGetSize(vec2, &N2));
+    if (N1 != N2) flg1 = PETSC_FALSE;
+    else {
+      PetscCall(VecGetLocalSize(vec1, &n1));
+      PetscCall(VecGetLocalSize(vec2, &n2));
+      if (n1 != n2) flg1 = PETSC_FALSE;
+      else {
+        PetscCall(VecGetArrayRead(vec1, &v1));
+        PetscCall(VecGetArrayRead(vec2, &v2));
+        PetscCall(PetscArraycmp(v1, v2, n1, &flg1));
+        PetscCall(VecRestoreArrayRead(vec1, &v1));
+        PetscCall(VecRestoreArrayRead(vec2, &v2));
+      }
+    }
+    /* combine results from all processors */
+    PetscCall(MPIU_Allreduce(&flg1, flg, 1, MPIU_BOOL, MPI_MIN, PetscObjectComm((PetscObject)vec1)));
+  }
+  PetscFunctionReturn(PETSC_SUCCESS);
+}
+```
+
+  Il faudrait alors examiner les implémentations de chaque fonction *PETSc* utilisée...
+
+### Vers le *Exascale*
+
+- Portabilité
+- Multi-GPU
+- Task-based programming
+- Algorithmiques du STL C++
 
 ## Annexes
 
