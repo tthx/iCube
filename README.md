@@ -87,7 +87,7 @@ C'est sur l'implémentation dite de *référence* de *Ginkgo*
 - des trois méthodes du *GC* de *Ginkgo*, [`ginkgo/reference/solver/cg_kernels.cpp`](https://github.com/ginkgo-project/ginkgo/blob/49242ff89af1e695d7794f6d50ed9933024b66fe/reference/solver/cg_kernels.cpp), et
 - des matrices denses, [`ginkgo/reference/matrix/dense_kernels.cpp`](https://github.com/ginkgo-project/ginkgo/blob/49242ff89af1e695d7794f6d50ed9933024b66fe/reference/matrix/dense_kernels.cpp),
 
-que se sont portées les *optimisations polyédriques*. Ces optimisations se limitent, actuellement, aux CPUs et ont été comparées à celles effectuées avec *OpenMP* qui servent donc de références.
+que se sont portées les *optimisations polyédriques*. Ces optimisations se limitent, actuellement, aux CPUs et ont été comparées à celles effectuées avec *OpenMP*, servant de références.
 
 Deux outils ont été utilisés:
 
@@ -96,7 +96,7 @@ Deux outils ont été utilisés:
 
 #### LLVM/Polly
 
-Le travail avec *LLVM/Polly* est des plus simples et constitue l'idéal promu par les concepteurs des *optimisations polyédriques*: le seul travail du développeur se borne à lancer la compilation, en activant les options nécessaires, avec, au pire, comme modification de son code, d'ajouter des balises, pour aider le compilateur à identifier les *SCoP*, pour optimiser son code. La documentation de *LLVM/Polly* instruit sur les options à utiliser pour le compilateur *[C](https://en.cppreference.com/w/c)/[C++](https://en.cppreference.com/w/)* [*Clang*](https://clang.llvm.org/): [*Using Polly with Clang*](https://polly.llvm.org/docs/UsingPollyWithClang.html).
+Le travail avec *LLVM/Polly* est des plus simples et constitue l'idéal promu par les concepteurs des *optimisations polyédriques*: le seul travail du développeur se borne à lancer la compilation, en activant les options nécessaires, avec, au pire, comme modification de son code, l'ajout de balise, pour aider le compilateur à identifier les *SCoP*, pour optimiser son code. La documentation de *LLVM/Polly* instruit sur les options à utiliser pour le compilateur *[C](https://en.cppreference.com/w/c)/[C++](https://en.cppreference.com/w/)* [*Clang*](https://clang.llvm.org/): [*Using Polly with Clang*](https://polly.llvm.org/docs/UsingPollyWithClang.html).
 
 Les options de *LLVM/Polly* utilisées sont:
 
@@ -126,7 +126,7 @@ target_compile_options(ginkgo_reference PRIVATE "SHELL:-Wno-unused-command-line-
 
 #### PLUTO
 
-*PLUTO* est représente probablement l'état de l'art des *optimisations polyédriques*: *PLUTO* regroupe la majorité des outils développés, donc des recherches, sur le sujet. Ses caractéristiques:
+*PLUTO* représente probablement l'état de l'art des *optimisations polyédriques*: *PLUTO* regroupe la majorité des outils développés, donc des recherches, sur le sujet. Ses caractéristiques:
 
 - L'utilisateur doit baliser (avec les directives `#pragma scop` et `#pragma endscop`) son code pour instruire *PLUTO* des *SCoP*.
 - *PLUTO* n'est pas intégré à un compilateur.
@@ -210,7 +210,7 @@ target_compile_options(ginkgo_reference PRIVATE "SHELL:-Wno-unused-command-line-
         free(tmp);
     }
     ```
-- *Ginkgo* dispose d'une batterie de test pour valider les *optimisations polyédriques* apportées par *PLUTO*.
+- *Ginkgo* dispose heureusement d'une batterie de test, ce qui a facilité la validation des *optimisations polyédriques* par *PLUTO*.
 - *PLUTO* passe par *OpenMP* pour la parallélisation et la vectorisation.
 
 #### Résultats
