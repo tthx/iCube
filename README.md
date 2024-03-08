@@ -117,7 +117,7 @@ target_compile_options(ginkgo_reference PRIVATE "SHELL:-Wno-unused-command-line-
 
   > *Polly - Export Scops as JSON (Writes a .jscop file for each Scop)*
 
-  Mais cette option plante *Clang* pour ses versions 15.x: pour l'utiliser, il faut passer aux versions strictement supérieures à 15.x de *Clang*. De plus, cet option gère mal les noms des fichiers générés: il faut l'appliquer avec parcimonie...
+  Mais cette option plante *Clang* pour ses versions 15.x: pour l'utiliser, il faut passer aux versions strictement supérieures à 15.x de *Clang*. De plus, cette option gère mal les noms des fichiers générés: il faut l'appliquer avec parcimonie...
 
 - *LLVM/Polly* a l'avantage d'être indépendant du langage de programmation utilisé par le programmeur: *LLVM/Polly* travaille sur les *représentations intermédiaires* ou [*IR*](https://en.wikipedia.org/wiki/Intermediate_representation) générées par le compilateur, responsable de la validation de la syntaxe.
 - Certaines fonctions impliquées dans le solveur *GC* de *Ginkgo* ne respectant pas les critères du *SCoP* (e.g. `step_1` et `step_2`), ne pouvant donc pas être optimisées par *LLVM/Polly* ont été reformulées: voire la section [PLUTO](#pluto) sur la fonction `step_1` pour plus de détail.
