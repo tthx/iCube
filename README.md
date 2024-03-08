@@ -6,7 +6,7 @@ Ils vont à M. [**Vincent LOECHNER**](http://icps.u-strasbg.fr/people/loechner/p
 
 ## Objectifs
 
-L'objectif est d'optimiser une partie d'un composant utilisé par [*OpenCARP*](https://opencarp.org/): [*Ginkgo*](https://ginkgo-project.github.io/), une librairie mathématique; *Ginkgo* devant remplacer [*PETSc*](https://petsc.org/release/), l'actuelle librairie mathématique utilisée. *Ginkgo* et *PETSc* manipulent principalement des vecteurs et des matrices, creuses et denses. La manipulation de matrices denses ou de vecteurs est propice aux [*optimisations polyédriques*](https://polyhedral.info/).
+L'objectif est d'optimiser une partie d'un composant utilisé par [*openCARP*](https://opencarp.org/): [*Ginkgo*](https://ginkgo-project.github.io/), une librairie mathématique; *Ginkgo* devant remplacer [*PETSc*](https://petsc.org/release/), l'actuelle librairie mathématique utilisée. *Ginkgo* et *PETSc* manipulent principalement des vecteurs et des matrices, creuses et denses. La manipulation de matrices denses ou de vecteurs est propice aux [*optimisations polyédriques*](https://polyhedral.info/).
 
 Le travail a emprunté le plan suivant:
 
@@ -75,7 +75,7 @@ void step_2(std::shared_ptr<const DefaultExecutor> exec,                  \
 
 Ces codes sont dans le fichier [`ginkgo/core/solver/gc_kernels.hpp`](https://github.com/ginkgo-project/ginkgo/blob/49242ff89af1e695d7794f6d50ed9933024b66fe/core/solver/cg_kernels.hpp) et définissent les interfaces des implémentions pour *CUDA*, *HIP*, *OpenMP*, etc.
 
-**Note**: *OpenCARP* travaille principalement sur des matrices creuses, pourtant implémentées dans *Ginkgo*, or les fonctions `initialize`, `step_1` et `step_2` du *GC* de *Ginkgo* portent sur des matrices denses: les matrices creuses sont converties en matrices denses (*Ginkgo* impose et implémente des [*constructeurs*](https://en.wikipedia.org/wiki/Constructor_(object-oriented_programming)) de conversion dans tous les sens), ce qui implique que les matrices denses obtenues contiennent potentiellement un nombre conséquent de zéro et occupent un espace mémoire important...
+**Note**: *openCARP* travaille principalement sur des matrices creuses, pourtant implémentées dans *Ginkgo*, or les fonctions `initialize`, `step_1` et `step_2` du *GC* de *Ginkgo* portent sur des matrices denses: les matrices creuses sont converties en matrices denses (*Ginkgo* impose et implémente des [*constructeurs*](https://en.wikipedia.org/wiki/Constructor_(object-oriented_programming)) de conversion dans tous les sens), ce qui implique que les matrices denses obtenues contiennent potentiellement un nombre conséquent de zéro et occupent un espace mémoire important...
 
 Ainsi, les éléments à optimiser sont identifiés:
 
@@ -115,7 +115,7 @@ target_compile_options(ginkgo_reference PRIVATE "SHELL:-Wno-unused-command-line-
 - Utiliser *LLVM/Polly* sur les implémentations optimisées pour *CUDA* ou *OpenMP* provoque des erreurs à l'exécution (mais la compilation avec *LLVM/Polly* activé se déroule comme un charme).
 - Pour connaître les *SCoP* identifiés par *LLVM/Polly*, ajouter les options `-mllvm -polly-export`, décrit comme:
 
-  > Polly - Export Scops as JSON (Writes a .jscop file for each Scop)
+  > *Polly - Export Scops as JSON (Writes a .jscop file for each Scop)*
 
   Mais cette option plante *Clang* pour ses versions 15.x: pour l'utiliser, il faut passer aux versions strictement supérieures à 15.x de *Clang*. De plus, cet option gère mal les noms des fichiers générés: il faut l'appliquer avec parcimonie...
 
@@ -366,7 +366,7 @@ En dépit des défauts de caches causés par les parcours des matrices denses pa
 
 ### Exploiter les optimisations pour *GPUs* par *PETSc*
 
-OpenCARP impose des interfaces aux
+openCARP impose des interfaces aux
 
 - [vecteurs](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/fem/slimfem/src/SF_abstract_vector.h),
 - [matrices](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/fem/slimfem/src/SF_abstract_matrix.h) et
@@ -580,7 +580,7 @@ Nous constatons que *PETSc* passe un temps conséquent à effectuer des copies e
 
   > *For the standard PETSc vectors, [`VecGetArray()`](https://petsc.org/release/manualpages/Vec/VecGetArray/) returns a pointer to the local data array and does not use any copies. If the underlying vector data is not stored in a contiguous array this routine will copy the data to a contiguous array and return a pointer to that. You MUST call [`VecRestoreArray()`](https://petsc.org/release/manualpages/Vec/VecRestoreArray/) when you no longer need access to the array.*
 
-  *OpenCARP* propose ces fonctions car, par exemple dans les *modèles ioniques*, les calculs ne sont pas effectués avec les vecteurs instanciés de la classe abstraite [`abstract_vector`](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/fem/slimfem/src/SF_abstract_vector.h#L54) implémentée avec la classe [`petsc_vector`](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/numerics/petsc/SF_petsc_vector.h), mais avec des vecteurs de la classe [`vector`](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/fem/slimfem/src/SF_vector.h): les `petsc_vector` servent principalement de tampon avec les `vector`. Comme les vecteurs *PETSc* sont, en principe, en mémoire *GPU*, les appels à `VecGetArray` effectuent des copies du GPU vers le CPU; et `VecRestoreArray` fait le chemin contraire... Comme la documentation sur `VecGetArray` est assez imprécise, il faut consulter la documentation de [`VecGetArrayAndMemType`](https://petsc.org/release/manualpages/Vec/VecGetArrayAndMemType/) pour être au clair:
+  *openCARP* propose ces fonctions car, par exemple dans les *modèles ioniques*, les calculs ne sont pas effectués avec les vecteurs instanciés de la classe abstraite [`abstract_vector`](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/fem/slimfem/src/SF_abstract_vector.h#L54) implémentée avec la classe [`petsc_vector`](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/numerics/petsc/SF_petsc_vector.h), mais avec des vecteurs de la classe [`vector`](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/fem/slimfem/src/SF_vector.h): les `petsc_vector` servent principalement de tampon avec les `vector`. Comme les vecteurs *PETSc* sont, en principe, en mémoire *GPU*, les appels à `VecGetArray` effectuent des copies du GPU vers le CPU; et `VecRestoreArray` fait le chemin contraire... Comme la documentation sur `VecGetArray` est assez imprécise, il faut consulter la documentation de [`VecGetArrayAndMemType`](https://petsc.org/release/manualpages/Vec/VecGetArrayAndMemType/) pour être au clair:
 
   > *Like [`VecGetArray()`](https://petsc.org/release/manualpages/Vec/VecGetArray/), but if this is a standard device vector (e.g., [`VECCUDA`](https://petsc.org/release/manualpages/Vec/VECCUDA/)), the returned pointer will be a device pointer to the device memory that contains this MPI processes’s portion of the vector data.*
 
