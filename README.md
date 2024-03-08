@@ -6,7 +6,7 @@ Ils vont à M. [**Vincent LOECHNER**](http://icps.u-strasbg.fr/people/loechner/p
 
 ## Objectifs
 
-L'objectif est d'optimiser une partie d'un composant utilisé par [*OpenCARP*](https://opencarp.org/): [*Ginkgo*](https://ginkgo-project.github.io/), une librairie mathématique; *Ginkgo* devant remplacer [*PETSc*](https://petsc.org/release/), l'actuelle librairie mathématique utilisée. *Ginkgo* et *PETSc* manipulent principalement des vecteurs et des matrices, et creuses et denses. La manipulation de matrices denses ou de vecteurs est propice aux [*optimisations polyédriques*](https://polyhedral.info/).
+L'objectif est d'optimiser une partie d'un composant utilisé par [*OpenCARP*](https://opencarp.org/): [*Ginkgo*](https://ginkgo-project.github.io/), une librairie mathématique; *Ginkgo* devant remplacer [*PETSc*](https://petsc.org/release/), l'actuelle librairie mathématique utilisée. *Ginkgo* et *PETSc* manipulent principalement des vecteurs et des matrices, creuses et denses. La manipulation de matrices denses ou de vecteurs est propice aux [*optimisations polyédriques*](https://polyhedral.info/).
 
 Le travail a emprunté le plan suivant:
 
