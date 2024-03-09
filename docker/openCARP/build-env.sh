@@ -181,7 +181,7 @@ build_env() {
   ginkgo_flavor="${ginkgo_flavor:-ginkgo}";
   flavor_list="${flavor_list:-${petsc_flavor} ${direct_flavor} ${pt_flavor} ${ginkgo_flavor}}";
   vect_type_list="${vect_type_list:-default generic cuda kokkos}";
-  generic_vect_type_list="${generic_vect_type_list:-default standard cuda kokkos}";
+  generic_vect_type_list="${generic_vect_type_list:-default standard cuda kokkos mix}";
 
   # autotester
   autotester_repo_url="${autotester_repo_url:-https://git.opencarp.org/iam-cms/autotester.git}";

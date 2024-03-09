@@ -594,6 +594,8 @@ Nous constatons que *PETSc* passe un temps conséquent à effectuer des copies e
 
   **Ces transferts sont imputables à la logique permise par l'interface des vecteurs *openCARP*: des composants constituant *openCARP* ont implémenté leur propre vecteur plutôt que de s'accorder sur une seule implémentation.**
 
+  *Note*: La combinaison où les vecteurs sont de type `standard` (i.e. sur *CPU*) et les matrices de type `aijcusparse` (i.e. sur *GPU*) ne fonctionne pas.
+
 - Cependant, les développeurs de *PETSc* n'ont probablement pas pris en compte ces problèmes de transfert *CPU*<->*GPU* à toutes les fonctions qu'ils ont implémentées... Par exemple pour la fonction [`VecEqual`](https://petsc.org/release/src/vec/vec/utils/vinv.c.html#VecEqual):
 
 ```c

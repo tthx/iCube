@@ -108,7 +108,7 @@ apply_patches() {
       "default")
         vect_type="";
         ;;
-      "standard"|"cuda"|"kokkos")
+      "standard"|"cuda"|"kokkos"|"mix")
         vect_type="${generic_vect_type}";
         ;;
     esac
