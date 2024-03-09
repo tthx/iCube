@@ -3,9 +3,54 @@ set -euo pipefail;
 
 backup() {
   local src_dir="${1}";
+  if [ -f "${src_dir}/benchmark/run_all_benchmarks.sh" ];
+  then
+    cp -f "${src_dir}/benchmark/run_all_benchmarks.sh" \
+      "${src_dir}/benchmark/run_all_benchmarks.sh.orig";
+  fi
+  if [ -f "${src_dir}/common/unified/matrix/dense_kernels.instantiate.cpp" ];
+  then
+    cp -f "${src_dir}/common/unified/matrix/dense_kernels.instantiate.cpp" \
+      "${src_dir}/common/unified/matrix/dense_kernels.instantiate.cpp.orig";
+  fi
+  if [ -f "${src_dir}/common/unified/matrix/dense_kernels.template.cpp" ];
+  then
+    cp -f "${src_dir}/common/unified/matrix/dense_kernels.template.cpp" \
+      "${src_dir}/common/unified/matrix/dense_kernels.template.cpp.orig";
+  fi
+  if [ -f "${src_dir}/common/unified/solver/cg_kernels.cpp" ];
+  then
+    cp -f "${src_dir}/common/unified/solver/cg_kernels.cpp" \
+      "${src_dir}/common/unified/solver/cg_kernels.cpp.orig";
+  fi
+  if [ -f "${src_dir}/omp/matrix/dense_kernels.cpp" ];
+  then
+    cp -f "${src_dir}/omp/matrix/dense_kernels.cpp" \
+      "${src_dir}/omp/matrix/dense_kernels.cpp.orig";
+  fi
+  if [ -f "${src_dir}/omp/solver/cg_kernels.cpp" ];
+  then
+    cp -f "${src_dir}/omp/solver/cg_kernels.cpp" \
+      "${src_dir}/omp/solver/cg_kernels.cpp.orig";
+  fi
+  if [ -f "${src_dir}/omp/CMakeLists.txt" ];
+  then
+    cp -f "${src_dir}/omp/CMakeLists.txt" \
+      "${src_dir}/omp/CMakeLists.txt.orig";
+  fi
+  if [ -f "${src_dir}/reference/matrix/dense_kernels.cpp" ];
+  then
+    cp -f "${src_dir}/reference/matrix/dense_kernels.cpp" \
+      "${src_dir}/reference/matrix/dense_kernels.cpp.orig";
+  fi
+  if [ -f "${src_dir}/reference/solver/cg_kernels.cpp" ];
+  then
+    cp -f "${src_dir}/reference/solver/cg_kernels.cpp" \
+      "${src_dir}/reference/solver/cg_kernels.cpp.orig";
+  fi
   if [ -f "${src_dir}/reference/CMakeLists.txt" ];
   then
-    mv -f "${src_dir}/reference/CMakeLists.txt" \
+    cp -f "${src_dir}/reference/CMakeLists.txt" \
       "${src_dir}/reference/CMakeLists.txt.orig";
   fi
   return 0;
@@ -13,6 +58,51 @@ backup() {
 
 restore() {
   local src_dir="${1}";
+  if [ -f "${src_dir}/benchmark/run_all_benchmarks.sh.orig" ];
+  then
+    mv -f "${src_dir}/benchmark/run_all_benchmarks.sh.orig" \
+      "${src_dir}/benchmark/run_all_benchmarks.sh";
+  fi
+  if [ -f "${src_dir}/common/unified/matrix/dense_kernels.instantiate.cpp.orig" ];
+  then
+    mv -f "${src_dir}/common/unified/matrix/dense_kernels.instantiate.cpp.orig" \
+      "${src_dir}/common/unified/matrix/dense_kernels.instantiate.cpp";
+  fi
+  if [ -f "${src_dir}/common/unified/matrix/dense_kernels.template.cpp.orig" ];
+  then
+    mv -f "${src_dir}/common/unified/matrix/dense_kernels.template.cpp.orig" \
+      "${src_dir}/common/unified/matrix/dense_kernels.template.cpp";
+  fi
+  if [ -f "${src_dir}/common/unified/solver/cg_kernels.cpp.orig" ];
+  then
+    mv -f "${src_dir}/common/unified/solver/cg_kernels.cpp.orig" \
+      "${src_dir}/common/unified/solver/cg_kernels.cpp";
+  fi
+  if [ -f "${src_dir}/omp/matrix/dense_kernels.cpp.orig" ];
+  then
+    mv -f "${src_dir}/omp/matrix/dense_kernels.cpp.orig" \
+      "${src_dir}/omp/matrix/dense_kernels.cpp";
+  fi
+  if [ -f "${src_dir}/omp/solver/cg_kernels.cpp.orig" ];
+  then
+    mv -f "${src_dir}/omp/solver/cg_kernels.cpp.orig" \
+      "${src_dir}/omp/solver/cg_kernels.cpp";
+  fi
+  if [ -f "${src_dir}/omp/CMakeLists.txt.orig" ];
+  then
+    mv -f "${src_dir}/omp/CMakeLists.txt.orig" \
+      "${src_dir}/omp/CMakeLists.txt";
+  fi
+  if [ -f "${src_dir}/reference/matrix/dense_kernels.cpp.orig" ];
+  then
+    mv -f "${src_dir}/reference/matrix/dense_kernels.cpp.orig" \
+      "${src_dir}/reference/matrix/dense_kernels.cpp";
+  fi
+  if [ -f "${src_dir}/reference/solver/cg_kernels.cpp.orig" ];
+  then
+    mv -f "${src_dir}/reference/solver/cg_kernels.cpp.orig" \
+      "${src_dir}/reference/solver/cg_kernels.cpp";
+  fi
   if [ -f "${src_dir}/reference/CMakeLists.txt.orig" ];
   then
     mv -f "${src_dir}/reference/CMakeLists.txt.orig" \
@@ -24,8 +114,26 @@ restore() {
 apply_patches() {
   local src_dir="${1}";
   local new_dir="${src_home}/iCube/ginkgo/${ginkgo_branch}";
+  cp -f "${new_dir}/benchmark/run_all_benchmarks.sh" \
+    "${src_dir}/benchmark/.";
+  cp -f "${new_dir}/common/unified/matrix/dense_kernels.instantiate.cpp" \
+    "${src_dir}/common/unified/matrix/.";
+  cp -f "${new_dir}/common/unified/matrix/dense_kernels.template.cpp" \
+    "${src_dir}/common/unified/matrix/.";
+  cp -f "${new_dir}/common/unified/solver/cg_kernels.cpp" \
+    "${src_dir}/common/unified/solver/.";
+  cp -f "${new_dir}/omp/matrix/dense_kernels.cpp" \
+    "${src_dir}/omp/matrix/.";
+  cp -f "${new_dir}/omp/solver/cg_kernels.cpp" \
+    "${src_dir}/omp/solver/.";
+  cp -f "${new_dir}/omp/CMakeLists.txt" \
+    "${src_dir}/omp/.";
+  cp -f "${new_dir}/reference/matrix/dense_kernels.cpp" \
+    "${src_dir}/reference/matrix/.";
+  cp -f "${new_dir}/reference/solver/cg_kernels.cpp" \
+    "${src_dir}/reference/solver/.";
   cp -f "${new_dir}/reference/CMakeLists.txt" \
-    "${src_dir}/reference/CMakeLists.txt";
+    "${src_dir}/reference/.";
   return 0;
 }
 
@@ -69,12 +177,7 @@ build_ginkgo() {
   local fortran="/usr/bin/gfortran";
   local fcflags="${cflags}";
   local ldflags="";
-  local src_dir="${ginkgo_polyhedral_src_dir}";
-  local branch="${ginkgo_polyhedral_branch}";
-  local repo_url="${ginkgo_polyhedral_repo_url}";
-  local prefix="${ginkgo_polyhedral_prefix}";
-  local dev="ON";
-  local version="${ginkgo_branch}";
+  local dev="OFF";
   if [ "${type}" == "${llvm_type}" ];
   then
     llvm_runtime_env;
@@ -100,33 +203,25 @@ build_ginkgo() {
     fi
     type+="-${poly}-$(${cc} --version | awk '/^gcc/{print $4}')"
   fi
-  if [ "${version}" != "${ginkgo_polyhedral_branch}" ];
-  then
-    src_dir="${ginkgo_src_dir}"
-    branch="${ginkgo_branch}";
-    repo_url="${ginkgo_repo_url}";
-    prefix="${ginkgo_prefix}";
-    dev="OFF";
-  fi
-  if [ ! -d "${src_dir}" ];
+  if [ ! -d "${ginkgo_src_dir}" ];
   then
     git clone \
       --depth=1 \
       --recursive \
-      -b "${branch}" \
-      "${repo_url}" \
-      "${src_dir}";
+      -b "${ginkgo_branch}" \
+      "${ginkgo_repo_url}" \
+      "${ginkgo_src_dir}";
   fi
-  cd "${src_dir}";
+  cd "${ginkgo_src_dir}";
   git pull --recurse-submodules;
-  restore "${src_dir}";
-  if [ "${type}" =~ "${llvm_type}" ];
+  restore "${ginkgo_src_dir}";
+  if [ "${poly}" == "ON" ];
   then
-    backup "${src_dir}";
-    apply_patches "${src_dir}";
+    apply_patches "${ginkgo_src_dir}";
+    dev="ON";
   fi
-  prefix+="${embedded:+/embedded}/${mpi_impl}";
-  rm -rf "${prefix}" "./build";
+  ginkgo_prefix+="${embedded:+/embedded}/${mpi_impl}";
+  rm -rf "${ginkgo_prefix}" "./build";
   mkdir -p "./build";
   cd "./build";
   export CC="${cc}";
@@ -150,7 +245,7 @@ build_ginkgo() {
     -DCMAKE_EXE_LINKER_FLAGS="${ldflags}" \
     -DCMAKE_SHARED_LINKER_FLAGS="${ldflags}" \
     -DCMAKE_MODULE_LINKER_FLAGS="${ldflags}" \
-    -DCMAKE_INSTALL_PREFIX="${prefix}" \
+    -DCMAKE_INSTALL_PREFIX="${ginkgo_prefix}" \
     -DCMAKE_BUILD_TYPE=Release \
     -DGINKGO_BUILD_OMP="${openmp}" \
     -DGINKGO_BUILD_MPI=ON \
@@ -167,7 +262,7 @@ build_ginkgo() {
     -DGINKGO_DEVEL_TOOLS="${dev}";
   ninja -j $(nproc);
   ninja install;
-  restore "${src_dir}";
+  restore "${ginkgo_src_dir}";
   mpi_env_var;
   ninja -j $(nproc) test;
   return ${?};

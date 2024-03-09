@@ -67,15 +67,21 @@ build_pluto() {
     --enable-glpk;
   make clean;
   restore;
-  apply_patches;
+  if [ "${pluto_branch}" != "0.12.0" ];
+  then
+    apply_patches;
+  fi
   make -j $(nproc) all;
   make test;
   make install;
   restore;
-  cp -f "${src_home}/iCube/pluto/inscop" \
-    "${pluto_prefix}/bin/.";
-  cp -f "${src_home}/iCube/pluto/polycc" \
-    "${pluto_prefix}/bin/.";
+  if [ "${pluto_branch}" != "0.12.0" ];
+  then
+    cp -f "${src_home}/iCube/pluto/inscop" \
+      "${pluto_prefix}/bin/.";
+    cp -f "${src_home}/iCube/pluto/polycc" \
+      "${pluto_prefix}/bin/.";
+  fi
   return ${?};
 }
 
