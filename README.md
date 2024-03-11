@@ -638,3 +638,27 @@ PetscErrorCode VecEqual(Vec vec1, Vec vec2, PetscBool *flg)
 Les défis qu'imposent la [*portabilité*](https://performanceportability.org/), le *multi-GPUs* et la hiérarchie mémoire pourraient être solubles par l'utilisation des [*algorithmes parallèles de la STL*](https://en.cppreference.com/w/cpp/algorithm), du *Global Address Space* et du *task-based programming*: [*HPx*](https://hpx.stellar-group.org/).
 
 ## Description de l'arborescence *github repository*
+
+- `docker/openCARP` contient un ensemble de script:
+  * `build-env.sh` définit les variables relatives aux:
+    * informations *github* (*repository*, *branch*),
+    * répertoires des sources et d'installation,
+    * contextes de compilation, d'utilisation, etc.
+  * les fichiers préfixés par `build-` servent à compiler les composants utilisés par *openCARP*,
+  * `get-cmake.sh` permet d'installer la version désirée de `cmake`. *Note*: les versions supérieures à `3.28.0` ne permettent pas à *openCARP* de détecter *CUDA*...
+  * `get-ginkgo-data.sh` permet de télécharger toutes les matrices creuses dites de références (i.e. [*SuiteSparse Matrix Collection Formerly the University of Florida Sparse Matrix Collection*](https://sparse.tamu.edu/)) pour mesurer les performances de *Ginkgo* (cf. [*Running the benchmarks*](https://github.com/ginkgo-project/ginkgo/blob/master/BENCHMARKING.md)),
+  * `ginkgo-benchmarks.sh` permet de sélectionner, en indiquant un intervalle de leur nombre d'élément non nul, les matrices creuses dites de références téléchargées à utiliser pour mesurer les performances de *Ginkgo*,
+  * `openCARP-docker.sh` permet d'installer un *container* *docker* à partir d'une *image* de *Ubuntu* avec un ensemble de paramètre présélectionné (e.g. le *container* résultant est paramétré pour utiliser les cartes *NVIDIA* et exploiter la mémoire partagée - [*MPICH*](https://www.mpich.org/) nécessitant [*UCX*](https://openucx.org/)),
+  * `openCARP-apt.sh` permet d'installer sur une distribution *Ubuntu* les paquets nécessaires pour compiler et exécuter les composants de *openCARP*,
+  * `poly-apt.sh` permet de n'installer, sur une distribution *Ubuntu*, que les paquets nécessaires pour compiler et exécuter les composants de *PLUTO*,
+  * `openCARP-example.sh` permet de faciliter l'exécution de l'exemple [*Basic usage of single cell tool bench - Limit cycle experiments*](https://opencarp.org/documentation/examples/01_ep_single_cell/01_basic_bench) avec les différentes modifications de *openCARP*,
+  * `openCARP-regression.sh` permet d'exécuter les tests dites de [*régression*](https://git.opencarp.org/openCARP/experiments/-/blob/master/TESTS.md) de *openCARP*,
+  * `openCARP-spack.sh` permet de compiler *openCARP* et ses composants à partir de [*spack*](https://spack.io/),
+  * `openCARP-setup.sh` permet de compiler *openCARP* et ses composants sans environnement particulier,
+  * `pluto-test.sh` permet d'exécuter la batterie de test fournie par *PLUTO*,
+  * `runtime-env.sh` définit les variables d'environnement nécessaires pour exécuter *openCARP*.
+- `ginkgo`
+  * `develop` contient les codes relatives à la section [*Algorithmiques*](#algorithmiques),
+  * `pluto` contient les codes relatives à la section [*PLUTO*](#pluto).
+- `openCARP` contient les codes relatives à la section [*Exploiter les optimisations pour GPUs par PETSc*](#exploiter-les-optimisations-pour-gpus-par-petsc).
+- Le reste sont des modifications, nécessaires pour les compiler, de sources de composants utilisés par *openCARP*.
