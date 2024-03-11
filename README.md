@@ -641,9 +641,13 @@ Les défis qu'imposent la [*portabilité*](https://performanceportability.org/),
 
 - `docker/openCARP` contient un ensemble de script:
   * `build-env.sh` définit les variables relatives aux:
+
     * informations *github* (*repository*, *branch*),
     * répertoires des sources et d'installation,
     * contextes de compilation, d'utilisation, etc.
+
+    des composants utilisés par *openCARP* et de *openCARP*,
+
   * les fichiers préfixés par `build-` servent à compiler les composants utilisés par *openCARP*,
   * `get-cmake.sh` permet d'installer la version désirée de `cmake`. *Note*: les versions supérieures à `3.28.0` ne permettent pas à *openCARP* de détecter *CUDA*...
   * `get-ginkgo-data.sh` permet de télécharger toutes les matrices creuses dites de références (i.e. [*SuiteSparse Matrix Collection Formerly the University of Florida Sparse Matrix Collection*](https://sparse.tamu.edu/)) pour mesurer les performances de *Ginkgo* (cf. [*Running the benchmarks*](https://github.com/ginkgo-project/ginkgo/blob/master/BENCHMARKING.md)),
@@ -661,4 +665,4 @@ Les défis qu'imposent la [*portabilité*](https://performanceportability.org/),
   * `develop` contient les codes relatives à la section [*Algorithmiques*](#algorithmiques),
   * `pluto` contient les codes relatives à la section [*PLUTO*](#pluto).
 - `openCARP` contient les codes relatives à la section [*Exploiter les optimisations pour GPUs par PETSc*](#exploiter-les-optimisations-pour-gpus-par-petsc).
-- Le reste sont des modifications, nécessaires pour les compiler, de sources de composants utilisés par *openCARP*.
+- Le reste correspond aux modifications, nécessaires pour les compiler, de sources des composants utilisés par *openCARP*.
