@@ -32,7 +32,6 @@ apply_patches() {
 
 build_pluto() {
   local script_dir="$(dirname "$(readlink -f "${BASH_SOURCE}")")";
-  local pluto_branch="master";
   . "${script_dir}/runtime-env.sh";
   python_runtime_env;
   cuda_runtime_env;
@@ -65,22 +64,22 @@ build_pluto() {
     --prefix="${pluto_prefix}" \
     --with-clang-prefix="$(llvm-config --prefix)" \
     --enable-glpk;
-  make clean;
-  restore;
-  if [ "${pluto_branch}" != "0.12.0" ];
+  if [ "${pluto_branch}" != "0.12.0" ] && [ "${pluto_branch}" != "master" ];
   then
+    restore;
+    make clean;
     apply_patches;
-  fi
-  make -j $(nproc) all;
-  make test;
-  make install;
-  restore;
-  if [ "${pluto_branch}" != "0.12.0" ];
-  then
+    make -j $(nproc) all;
+    make test;
+    make install;
+    restore;
     cp -f "${src_home}/iCube/pluto/inscop" \
       "${pluto_prefix}/bin/.";
     cp -f "${src_home}/iCube/pluto/polycc" \
       "${pluto_prefix}/bin/.";
+  else
+    make -j $(nproc);
+    make check-pluto;
   fi
   return ${?};
 }

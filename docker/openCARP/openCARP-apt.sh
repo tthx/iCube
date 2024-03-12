@@ -52,7 +52,7 @@ openCARP_apt() {
   local task_based="build-essential autoconf coreutils environment-modules gpg zip vim libpciaccess0 libpciaccess-dev libxnvctrl-dev libudev-dev libfabric-dev libgoogle-perftools-dev libasio-dev libopenblas-serial-dev libgtest-dev"; #libboost-all-dev
   local openmpi="openmpi-bin openmpi-common libopenmpi-dev";
   local starpu="doxygen doxygen-gui doxygen-doc libstarpu-dev starpu-tools starpu-examples";
-  local pluto="libyaml-dev libgmp3-dev glpk-utils libglpk-dev";
+  local pluto="texinfo libyaml-dev libgmp3-dev glpk-utils libglpk-dev";
   local gcc_version="12";
   local gcc="gcc-${gcc_version} g++-${gcc_version} gfortran-${gcc_version} cc-${gcc_version}-multilib g++-${gcc_version}-multilib gfortran-${gcc_version}-multilib";
   export DEBIAN_FRONTEND="noninteractive";
