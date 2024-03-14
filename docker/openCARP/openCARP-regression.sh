@@ -249,7 +249,7 @@ regression_test() {
       "${flavor}";
     i=$((i+1));
   done
-  restore;
+  restore "${autotester_dir}" "${devtests_dir}";
   return 0;
 }
 
