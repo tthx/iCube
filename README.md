@@ -10,7 +10,7 @@ L'objectif est d'optimiser une partie d'un composant utilisé par [*openCARP*](h
 
 Le travail a emprunté le plan suivant:
 
-- Exlorer les possibles optimisations par des méthodes polyédriques du solveur *Ginkgo* utilisé par *openCARP*.
+- Explorer les possibles optimisations par des méthodes polyédriques du solveur *Ginkgo* utilisé par *openCARP*.
 - Étudier les optimisations d'*openCARP* pour les architectures [*Exascale*](https://fr.wikipedia.org/wiki/Supercalculateur_exaflopique).
 
 L'essentiel du travail a été porté sur une mise à jour des connaissances par les lectures de nombreux articles, de cours et, évidemment, des discussions avec M. Vincent LOECHNER, le directeur de ce stage. Les implémentations et leurs tests, en proportion, ont occupé quelques 20% des activités.
@@ -366,7 +366,7 @@ En dépit des défauts de caches causés par les parcours des matrices denses pa
 
 ### Exploiter les optimisations pour *GPUs* par *PETSc*
 
-openCARP impose des interfaces aux
+*openCARP* impose des interfaces aux
 
 - [vecteurs](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/fem/slimfem/src/SF_abstract_vector.h),
 - [matrices](https://git.opencarp.org/openCARP/openCARP/-/blob/5649e7b4f0aa0b9f676e15505e2d98183c4715df/fem/slimfem/src/SF_abstract_matrix.h) et
@@ -596,7 +596,7 @@ Nous constatons que *PETSc* passe un temps conséquent à effectuer des copies e
 
   *Note*: La combinaison où les vecteurs sont de type `standard` (i.e. sur *CPU*) et les matrices de type `aijcusparse` (i.e. sur *GPU*) ne fonctionne pas.
 
-- Cependant, les développeurs de *PETSc* n'ont probablement pas pris en compte ces problèmes de transfert *CPU*<->*GPU* à toutes les fonctions qu'ils ont implémentées... Par exemple pour la fonction [`VecEqual`](https://petsc.org/release/src/vec/vec/utils/vinv.c.html#VecEqual):
+- Cependant, les développeurs de *PETSc* n'ont probablement pas pris en compte ces problèmes de transfert *CPU*<->*GPU* dans toutes les fonctions qu'ils ont implémentées... Par exemple pour la fonction [`VecEqual`](https://petsc.org/release/src/vec/vec/utils/vinv.c.html#VecEqual):
 
 ```c
 PetscErrorCode VecEqual(Vec vec1, Vec vec2, PetscBool *flg)
